@@ -60,6 +60,9 @@ export interface AnalyzerReviewSummary {
   publisher?: string | null;
   gurus?: string[];
   promoType?: string | null;
+  promoStatus?: string | null;
+  source?: "packager" | null;
+  hasPerformanceData?: boolean;
   effectivenessScore?: number | null;
   training?: {
     performanceScore?: number | null;

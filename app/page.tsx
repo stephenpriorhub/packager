@@ -4,6 +4,7 @@ import { useState } from "react";
 import UploadForm, { type GeneratePayload } from "@/components/UploadForm";
 import GeneratingView, { type CompStatus } from "@/components/GeneratingView";
 import ResultsView from "@/components/ResultsView";
+import TrainingLibrary from "@/components/TrainingLibrary";
 import { componentsForRun } from "@/lib/components";
 import type { GeneratedComponent } from "@/lib/generate";
 import type { PackageBrief } from "@/lib/brief";
@@ -16,6 +17,7 @@ interface Row {
 }
 
 export default function Home() {
+  const [tab, setTab] = useState<"generate" | "training">("generate");
   const [phase, setPhase] = useState<Phase>("upload");
   const [message, setMessage] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
@@ -110,7 +112,32 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      {error && (
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 px-6 pt-4" style={{ maxWidth: 960, margin: "0 auto" }}>
+        {(
+          [
+            { id: "generate", label: "📦 Generate" },
+            { id: "training", label: "🎓 Training Library" },
+          ] as const
+        ).map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className="px-4 py-2 rounded-t-lg text-sm font-medium"
+            style={{
+              background: tab === t.id ? "var(--surface)" : "transparent",
+              color: tab === t.id ? "var(--text)" : "var(--text-muted)",
+              borderBottom: tab === t.id ? "2px solid var(--accent)" : "2px solid transparent",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "training" && <TrainingLibrary />}
+
+      {tab === "generate" && error && (
         <div className="max-w-2xl mx-auto mt-4 px-4">
           <div className="rounded-lg p-3 text-sm" style={{ background: "var(--surface)", border: "1px solid var(--danger)", color: "var(--danger)" }}>
             {error}
@@ -118,13 +145,13 @@ export default function Home() {
         </div>
       )}
 
-      {phase === "upload" && <UploadForm onSubmit={handleGenerate} busy={false} />}
+      {tab === "generate" && phase === "upload" && <UploadForm onSubmit={handleGenerate} busy={false} />}
 
-      {phase === "generating" && (
+      {tab === "generate" && phase === "generating" && (
         <GeneratingView message={message} rows={rows} completed={completed} total={total} />
       )}
 
-      {phase === "results" && brief && packageId && (
+      {tab === "generate" && phase === "results" && brief && packageId && (
         <ResultsView
           packageId={packageId}
           brief={brief}
