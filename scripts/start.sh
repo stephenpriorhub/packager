@@ -8,4 +8,4 @@ if [ -n "$DATA_DIR" ]; then
 fi
 
 echo "[app] Starting The Packager (Next.js) on port ${PORT:-3000}..."
-exec npm start
+exec npx next start -H 0.0.0.0 -p "${PORT:-3000}"
