@@ -18,7 +18,20 @@ const STORE_PATH = path.join(DATA_DIR, "training.json");
 export interface TrainedComponent {
   category: string; // analyzer supplemental category (≈ component label)
   filename: string;
-  text: string; // extracted at ingest time
+  /**
+   * The individual pieces in this document. Real example docs usually hold
+   * many items (e.g. 10 lifts in one Word doc) — they're split at ingest so
+   * each lift/ad is its own retrievable training example.
+   */
+  items: string[];
+  /** legacy single-blob field from pre-split entries */
+  text?: string;
+}
+
+/** Individual items of a component, tolerating legacy pre-split entries. */
+export function componentItems(c: TrainedComponent): string[] {
+  if (c.items && c.items.length > 0) return c.items;
+  return c.text ? [c.text] : [];
 }
 
 export interface TrainingEntry {

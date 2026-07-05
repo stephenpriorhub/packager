@@ -68,7 +68,7 @@ export default function TrainingLibrary() {
         setNotice(json.error ?? "Training failed");
       } else {
         setNotice(
-          `✓ Ingested ${json.ingested} component(s)` +
+          `✓ Ingested ${json.ingested} individual example(s) from ${json.docs} doc(s)` +
             (json.failed?.length ? ` — couldn't read: ${json.failed.join(", ")}` : "")
         );
         await load();
@@ -185,7 +185,7 @@ export default function TrainingLibrary() {
                     {r.trained ? (
                       <span className="flex items-center gap-2">
                         <span className="text-xs" style={{ color: "var(--success)" }}>
-                          ✓ Training ({r.trainedComponentCount})
+                          ✓ Training ({r.trainedComponentCount} examples)
                         </span>
                         <button
                           onClick={() => ingest(r.reviewId)}

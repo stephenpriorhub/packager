@@ -16,10 +16,12 @@ import {
   listTrainingEntries,
   upsertTrainingEntry,
   removeTrainingEntry,
+  componentItems,
   type TrainedComponent,
 } from "@/lib/training-store";
 import { ALL_COMPONENTS } from "@/lib/components";
 import { categoryMatchesSpec } from "@/lib/rag";
+import { splitItems } from "@/lib/split-items";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -53,7 +55,9 @@ export async function GET(req: NextRequest) {
         componentCount: files.length,
         categories: [...new Set(files.map((f) => f.category))],
         trained: !!entry,
-        trainedComponentCount: entry?.components.length ?? 0,
+        trainedComponentCount: entry
+          ? entry.components.reduce((n, c) => n + componentItems(c).length, 0)
+          : 0,
         ingestedAt: entry?.ingestedAt ?? null,
       };
     })
@@ -64,11 +68,14 @@ export async function GET(req: NextRequest) {
       return (b.performanceScore ?? b.effectivenessScore ?? 0) - (a.performanceScore ?? a.effectivenessScore ?? 0);
     });
 
-  // Coverage: for each component type, how many trained exemplars exist?
+  // Coverage: for each component type, how many individual trained examples
+  // exist (items, not docs — one doc can hold 10 lifts).
   const coverage = ALL_COMPONENTS.map((spec) => {
     let count = 0;
     for (const entry of trained) {
-      count += entry.components.filter((c) => categoryMatchesSpec(c.category, spec)).length;
+      for (const c of entry.components) {
+        if (categoryMatchesSpec(c.category, spec)) count += componentItems(c).length;
+      }
     }
     return { slug: spec.slug, label: spec.label, hotlist: spec.hotlist, exemplars: count };
   });
@@ -96,16 +103,23 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Extract every component's text now, once.
+  // Extract every component's text once, then split multi-item docs into
+  // individual pieces (a doc often holds e.g. 10 lifts — each becomes its own
+  // training example). Single-doc categories (order form, popups) skip the split.
   const components: TrainedComponent[] = [];
   const failed: string[] = [];
   for (const f of files) {
     const text = await fetchSupplementalText(reviewId, f.id, f.filename);
-    if (text && text.trim()) {
-      components.push({ category: f.category, filename: f.filename, text: text.slice(0, 20000) });
-    } else {
+    if (!text || !text.trim()) {
       failed.push(f.filename);
+      continue;
     }
+    const spec = ALL_COMPONENTS.find((s) => categoryMatchesSpec(f.category, s));
+    const items =
+      spec?.perItem === true
+        ? await splitItems(f.category, text)
+        : [text.trim().slice(0, 20000)];
+    components.push({ category: f.category, filename: f.filename, items });
   }
 
   if (components.length === 0) {
@@ -131,7 +145,13 @@ export async function POST(req: NextRequest) {
     ingestedBy: user.email,
   });
 
-  return NextResponse.json({ ok: true, ingested: components.length, failed });
+  const itemCount = components.reduce((n, c) => n + componentItems(c).length, 0);
+  return NextResponse.json({
+    ok: true,
+    ingested: itemCount,
+    docs: components.length,
+    failed,
+  });
 }
 
 export async function DELETE(req: NextRequest) {

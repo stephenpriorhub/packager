@@ -19,7 +19,7 @@ import {
   fetchSupplementalText,
   type AnalyzerReviewSummary,
 } from "./analyzer-client";
-import { listTrainingEntries, type TrainingEntry } from "./training-store";
+import { listTrainingEntries, componentItems, type TrainingEntry } from "./training-store";
 
 const MAX_EXEMPLARS = 3;
 const EXEMPLAR_CHARS = 1500;
@@ -72,7 +72,14 @@ function formatExemplar(title: string, tierNote: string, gurus: string[], text: 
   return `— Example from "${title}" (${tierNote}${gurus.length ? `, ${gurus.join("/")}` : ""}):\n${text.slice(0, EXEMPLAR_CHARS)}`;
 }
 
-/** Curated exemplars from the Training Library (instant — cached text). */
+/**
+ * Curated exemplars from the Training Library (instant — cached text).
+ *
+ * Docs are stored as INDIVIDUAL items (one doc may hold 10 lifts), so we
+ * round-robin across the ranked promos' item pools: exemplar #1 from the best
+ * promo, #2 from the next, etc., cycling deeper if only one promo is trained.
+ * That keeps the few-shot set diverse instead of three lifts from one doc.
+ */
 function curatedExemplars(spec: ComponentSpec, brief: PackageBrief): string[] {
   let entries: TrainingEntry[];
   try {
@@ -80,32 +87,32 @@ function curatedExemplars(spec: ComponentSpec, brief: PackageBrief): string[] {
   } catch {
     return [];
   }
-  const withMatch = entries
+  const pools = entries
     .map((e) => ({
       entry: e,
-      matches: e.components.filter((c) => categoryMatchesSpec(c.category, spec)),
+      items: e.components
+        .filter((c) => categoryMatchesSpec(c.category, spec))
+        .flatMap((c) => componentItems(c)),
     }))
-    .filter((x) => x.matches.length > 0)
-    .sort(
-      (a, b) =>
-        rank(
-          { ...b.entry, gurus: b.entry.gurus },
-          brief
-        ) -
-        rank({ ...a.entry, gurus: a.entry.gurus }, brief)
-    );
+    .filter((x) => x.items.length > 0)
+    .sort((a, b) => rank(b.entry, brief) - rank(a.entry, brief));
 
   const out: string[] = [];
-  for (const { entry, matches } of withMatch) {
-    for (const m of matches) {
-      if (out.length >= MAX_EXEMPLARS) return out;
+  for (let round = 0; out.length < MAX_EXEMPLARS; round++) {
+    let took = false;
+    for (const { entry, items } of pools) {
+      if (out.length >= MAX_EXEMPLARS) break;
+      const item = items[round];
+      if (item === undefined) continue;
       const tier = entry.isBestPerformer
         ? "best performer"
         : entry.hasPerformanceData
         ? "proven promo"
         : "trained example";
-      out.push(formatExemplar(entry.title, tier, entry.gurus, m.text));
+      out.push(formatExemplar(entry.title, tier, entry.gurus, item));
+      took = true;
     }
+    if (!took) break; // all pools exhausted
   }
   return out;
 }
