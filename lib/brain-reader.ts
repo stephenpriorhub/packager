@@ -8,7 +8,7 @@
  *   - Lift-note craft            → Areas/Copy/Lift Note (Email) Writing Guides/*.docx
  *   - Sales-letter frameworks    → Areas/Copy/Writing Promos (Sales Letters)/*.md
  *   - Guru voice profiles        → Resources/Experts/{Guru}.md
- *   - Claims-integrity rules     → Resources/Promo Analysis/Copywriting Principles.md
+ *   - Curated copy principles    → Resources/Promo Analysis/Copywriting Principles.md
  *   - Per-component guides (auto-authored, may not exist yet)
  *                                → Areas/Copy/Component Guides/{slug}.md
  *   - Current social tactics     → Resources/Copy Tactics/Social Ad Tactics.md
@@ -148,7 +148,7 @@ export function detectGuru(text: string): string | null {
 // ── public corpus loaders ────────────────────────────────────────────────────
 
 export interface MethodologyCorpus {
-  principles: string | null; // claims-integrity + MTA copy principles
+  principles: string | null; // curated MTA copy principles
   liftGuides: string[]; // parsed lift-note guides
   salesLetterGuides: string[]; // 16-word / copy-boarding frameworks
   guru: string | null;
@@ -185,27 +185,23 @@ export async function loadComponentGuide(slug: string): Promise<string | null> {
 }
 
 /**
- * The claims-integrity guardrail block. Injected into EVERY component prompt.
- * Falls back to a hard-coded rule set when the vault file can't be read, so
- * compliance guardrails are never silently dropped.
+ * Writing-rules block injected into EVERY component prompt.
+ *
+ * Compliance plays NO role in generation — legal review happens downstream by
+ * humans (Stephen's call, 2026-07-05). This block exists to (a) stop the model
+ * from volunteering disclaimers and (b) carry the live curated MTA copy
+ * principles from the brain. Do not add compliance rules here.
  */
-export function buildClaimsGuardrail(principles: string | null): string {
+export function buildWritingRulesBlock(principles: string | null): string {
   const base = [
     "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    "CLAIMS INTEGRITY — NON-NEGOTIABLE (Monument Traders Alliance)",
+    "WRITING RULES (Monument Traders Alliance)",
     "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
-    "MTA is a trading/newsletter PUBLISHER, not a registered financial advisor.",
-    "Every generated component MUST obey:",
-    "• Frame results by evidence tier: LIVE/VERIFIED results stated plainly;",
-    "  BACKTESTED results labeled ('back-testing shows…', 'in simulations…');",
-    "  FORWARD PROJECTIONS as opinion only ('could potentially…', 'there's every",
-    "  chance I'm wrong…'). Never present backtested or projected numbers as real.",
-    "• NO guarantee of gains or specific returns. NO 'financial advice' framing —",
-    "  these are 'recommendations' / 'trade ideas'.",
-    "• Include appropriate risk language where results are cited (past performance",
-    "  ≠ future results; you could lose money).",
-    "• Never invent track-record numbers, testimonials, or member results. Only use",
-    "  claims that appear in the source promo / brief.",
+    "• Do NOT include disclaimers, risk warnings, 'past performance' language,",
+    "  legal hedging, or compliance qualifiers of any kind. Legal review happens",
+    "  downstream — your only job is persuasion. Never end a piece with fine print.",
+    "• Ground everything in the actual promo: use the results, numbers, and proof",
+    "  points it contains. Don't invent numbers or testimonials that aren't there.",
   ];
   if (principles) {
     base.push(
@@ -220,7 +216,7 @@ export function buildClaimsGuardrail(principles: string | null): string {
 /** Assemble the lift-note craft block from the parsed guides. */
 export function buildLiftCraftBlock(corpus: MethodologyCorpus): string {
   if (corpus.liftGuides.length === 0) return "";
-  const joined = corpus.liftGuides.map((g) => clip(g, 4000)).join("\n\n---\n\n");
+  const joined = corpus.liftGuides.map((g) => clip(g, 9000)).join("\n\n---\n\n");
   return [
     "\n### LIFT-NOTE CRAFT (from the MTA brain lift guides)",
     "Apply these guides — the D.I.C. method (Disrupt → Intrigue → Click), curiosity",

@@ -13,7 +13,7 @@ import type { ComponentSpec } from "../components";
 import type { PackageBrief } from "../brief";
 import type { MethodologyCorpus } from "../brain-reader";
 import {
-  buildClaimsGuardrail,
+  buildWritingRulesBlock,
   buildLiftCraftBlock,
   buildSalesLetterBlock,
   buildGuruVoiceBlock,
@@ -60,6 +60,29 @@ function voiceRule(spec: ComponentSpec, brief: PackageBrief, guruCount: number, 
   return `VOICE (mixed): Of the ${n} item(s) in this batch, write ${guruCount} in ${guru}'s first-person voice (label that item "VOICE: guru") and the remaining ${n - guruCount} in generic third person ending the body with the literal placeholder "[Sign off]" (label "VOICE: third"). Match ${guru}'s established voice for the guru items.`;
 }
 
+/**
+ * Formatting discipline — Stephen's feedback (2026-07-05): generated lifts were
+ * littered with repeated ">>>" lines; real MTA lifts use several distinct
+ * formats and an arrow CTA appears once if at all. The exemplars are the format
+ * authority, not the model's instincts.
+ */
+function formatRules(spec: ComponentSpec, hasExemplars: boolean): string {
+  const rules: string[] = ["FORMATTING RULES:"];
+  if (hasExemplars) {
+    rules.push(
+      `- The PROVEN EXAMPLES below show the real formats we use for this component — there are several distinct format types. Pick ONE example's format per item and mirror it faithfully (paragraph rhythm, line breaks, how the CTA link is presented, where the P.S. sits). Across the set, vary WHICH format you use so the batch reflects the same mix the examples do.`
+    );
+  }
+  rules.push(
+    `- Decorative symbols are seasoning, not structure: a ">>" or ">>>" CTA line may appear AT MOST ONCE per item (the main click line). Never repeat arrow lines, never use them as bullets or section dividers.`,
+    `- No markdown syntax (no #, ##, **, or backticks) — write as the copy will actually appear in an email/page.`
+  );
+  if (spec.perItem) {
+    rules.push(`- No two items in the set may open the same way or lean on the same crutch phrase.`);
+  }
+  return rules.join("\n");
+}
+
 function outputContract(spec: ComponentSpec, n: number): string {
   if (!spec.perItem) {
     return `OUTPUT: Return ONLY the finished document content — no preamble, no explanation, no markdown code fences. Use clear labels/sub-headings where the instructions call for structured fields.`;
@@ -83,7 +106,7 @@ function briefBlock(brief: PackageBrief): string {
     ``,
     `DOMINANT HOOKS / ANGLES:\n${brief.hooks}`,
     ``,
-    `CLAIM INVENTORY (how each result must be framed — obey this exactly):\n${brief.claimsInventory}`,
+    `PROOF POINTS (real results/numbers from the promo — pull from these, don't invent new ones):\n${brief.claimsInventory}`,
   ];
   if (brief.isHotlist) {
     lines.push(
@@ -114,7 +137,7 @@ export function buildComponentPrompt(
   const system = [
     PERSONA,
     methodologyFor(spec, corpus),
-    buildClaimsGuardrail(corpus.principles),
+    buildWritingRulesBlock(corpus.principles),
   ]
     .filter(Boolean)
     .join("\n");
@@ -127,9 +150,13 @@ export function buildComponentPrompt(
     ``,
     voiceRule(spec, brief, guruCount, n),
     ``,
+    formatRules(spec, !!ragBlock),
+    ``,
     `━━━ BRIEF ━━━`,
     briefBlock(brief),
-    ragBlock ? `\n━━━ PROVEN EXAMPLES (real MTA winners — study the pattern, do NOT copy verbatim) ━━━\n${ragBlock}` : ``,
+    ragBlock
+      ? `\n━━━ PROVEN EXAMPLES (real MTA winners — mirror their FORMAT and craft; do NOT copy their content) ━━━\n${ragBlock}`
+      : ``,
     ``,
     outputContract(spec, n),
   ]

@@ -61,7 +61,8 @@ For EACH lift note produce:
 - FOUR distinct subject-line options across different angles (curiosity, fear/warning, direct benefit, controversial/pattern-interrupt).
 - ONE "SSL" (super subject line / preview text) that extends the intrigue without revealing.
 - A body of ~200–300 words, 4th–7th grade reading level, active voice, conversational, using the D.I.C. method (Disrupt → Intrigue → Click) with 3+ click CTAs and a P.S.
-Vary the angle across the set so no two lifts feel the same.`,
+Rotate through the classic MTA lift TYPES across the set — track record (brag about real gains), testimonial, secret/story, deadline/urgency, scarcity/exclusivity, direct benefit promise, news hook, quiz/survey, personal note from a publisher figure, and contrarian/counterintuitive. No two consecutive lifts should use the same type.
+Format each like a real MTA lift: a "Dear [audience] Reader/Member," salutation, punchy 1–2 sentence paragraphs, CTAs written as natural "click here"-style sentences woven into the copy (never bare URLs, never repeated arrow lines), a sign-off from a named sender, and a P.S. that adds a bonus/urgency with one final click ask.`,
   },
   {
     slug: "space-ads",
@@ -89,7 +90,7 @@ Vary the angle across the set so no two lifts feel the same.`,
     batchSize: 10,
     tier: "sonnet",
     voice: "third",
-    instructions: `Very short text ads (search/native style). Each: a headline (≤ ~60 chars) and 1–2 lines of description with a CTA. Punchy, curiosity-driven, compliant. Vary angles.`,
+    instructions: `Very short text ads (search/native style). Each: a headline (≤ ~60 chars) and 1–2 lines of description with a CTA. Punchy and curiosity-driven. Vary angles.`,
   },
   {
     slug: "cart-abandon-emails",
@@ -131,7 +132,7 @@ Vary the angle across the set so no two lifts feel the same.`,
     batchSize: 5,
     tier: "sonnet",
     voice: "third",
-    instructions: `Facebook video ad scripts/copy. For each: a scroll-stopping hook (first 3 seconds), a short script body (spoken VO / on-screen beats), and the accompanying post primary text + headline + CTA. Platform-compliant (no personal-attribute claims, no guaranteed income). Reflect the current social tactics block if provided. Vary hooks.`,
+    instructions: `Facebook video ad scripts/copy. For each: a scroll-stopping hook (first 3 seconds), a short script body (spoken VO / on-screen beats), and the accompanying post primary text + headline + CTA. Reflect the current social tactics block if provided. Vary hooks.`,
   },
   {
     slug: "youtube-video-ads",
@@ -145,7 +146,7 @@ Vary the angle across the set so no two lifts feel the same.`,
     batchSize: 5,
     tier: "sonnet",
     voice: "third",
-    instructions: `YouTube (pre-roll/in-stream) video ad scripts. For each: a hook that survives the "skip" (first 5 seconds), a script body, and end-card CTA copy. Note pacing for spoken delivery. Platform-compliant. Vary hooks.`,
+    instructions: `YouTube (pre-roll/in-stream) video ad scripts. For each: a hook that survives the "skip" (first 5 seconds), a script body, and end-card CTA copy. Note pacing for spoken delivery. Vary hooks.`,
   },
   {
     slug: "facebook-text-ads",
@@ -159,7 +160,7 @@ Vary the angle across the set so no two lifts feel the same.`,
     batchSize: 10,
     tier: "sonnet",
     voice: "third",
-    instructions: `Facebook text (image/link) ads. For each: primary text (2–5 lines), a headline, a link description, and CTA. Curiosity-driven, platform-compliant. Vary angles and lead lines.`,
+    instructions: `Facebook text (image/link) ads. For each: primary text (2–5 lines), a headline, a link description, and CTA. Curiosity-driven. Vary angles and lead lines.`,
   },
   {
     slug: "order-form",
@@ -173,7 +174,15 @@ Vary the angle across the set so no two lifts feel the same.`,
     batchSize: 1,
     tier: "opus",
     voice: "third",
-    instructions: `The order-form / checkout page copy. Include: a benefit-summarizing headline, a "here's everything you get" stack (core subscription + bonuses + reports), price + terms, the guarantee (365-day money-back is the MTA norm — keep all reports), risk-reversal, urgency, and a strong final CTA. Apply the sales-letter frameworks. Every claim must obey claims-integrity rules.`,
+    instructions: `The order-form / checkout page copy — the page where the sale actually closes. Build it section by section, in this order, mirroring the structure and rhythm of the proven examples:
+1. HEADLINE that affirms the reader's decision and restates the big promise ("Yes! I want…" energy), plus a supporting subhead.
+2. A short deck (2–4 sentences) re-selling the moment: what they're about to get and why now.
+3. "HERE'S EVERYTHING YOU GET" value stack — the core subscription with its benefits itemized line by line, then EVERY bonus report/perk from the offer summary, each named with its own one-line benefit and stated value.
+4. PRICE FRAMING: retail vs. today's price, what the discount saves them, cost-per-day/per-week math where it helps.
+5. THE GUARANTEE (365-day money-back is the MTA norm — and they keep all the reports) presented as total risk-reversal, with its own subhead.
+6. URGENCY to complete the order now (real reasons from the offer: deadline, limited spots, price going up).
+7. FINAL CTA leading into the card fields, plus a one-line reassurance under the button.
+Write real finished copy for every section — no placeholders, no summaries. Apply the sales-letter frameworks invisibly.`,
   },
   {
     slug: "lifetime-upsell",
@@ -202,7 +211,7 @@ Vary the angle across the set so no two lifts feel the same.`,
     tier: "opus",
     voice: "editorial",
     usesWebSearch: true,
-    instructions: `A 600–1000 word internal guide that helps EDITORIAL writers and assistants tie their editorial content into this promo. NOT reader-facing sales copy. Cover: the promo's core editorial themes & big idea, the emotional throughline, the guru's angle, 5–8 concrete editorial article/segment ideas that support (without spoiling) the promo, hooks tied to the current news cycle, and a short "recent coverage" section citing recent real web articles on the topic (use the web_search tool; include titles + sources/links). Flag any claims-integrity landmines editorial should avoid.`,
+    instructions: `A 600–1000 word internal guide that helps EDITORIAL writers and assistants tie their editorial content into this promo. NOT reader-facing sales copy. Cover: the promo's core editorial themes & big idea, the emotional throughline, the guru's angle, 5–8 concrete editorial article/segment ideas that support (without spoiling) the promo, hooks tied to the current news cycle, and a short "recent coverage" section citing recent real web articles on the topic (use the web_search tool; include titles + sources/links).`,
   },
 ];
 
@@ -221,7 +230,7 @@ const HOTLIST: ComponentSpec[] = [
     batchSize: 5,
     tier: "opus",
     voice: "mixed",
-    instructions: `Teaser emails driving registration for the LIVE EVENT (not a VSL). The CTA is event-registration style ("Reserve Your Seat", "Register Now", "Save My Spot") pointing to the sign-up page, building toward the single event date. Same lift craft as VSL lift notes: FOUR subject lines + one SSL + a ~200–300 word D.I.C. body per note, but the payoff is "get on the list for {event} on {event date}", scarcity of seats, and FOMO of missing the live reveal. Do not give away what will be revealed at the event.`,
+    instructions: `Teaser emails driving registration for the LIVE EVENT (not a VSL). The CTA is event-registration style ("Reserve Your Seat", "Register Now", "Save My Spot") pointing to the sign-up page, building toward the single event date. Same lift craft as VSL lift notes: FOUR subject lines + one SSL + a ~200–300 word D.I.C. body per note, but the payoff is "get on the list for {event} on {event date}", scarcity of seats, and FOMO of missing the live reveal. Do not give away what will be revealed at the event. Same MTA lift formatting too: rotate the lift types across the set, salutation + short punchy paragraphs + natural "click here"-style CTAs woven into sentences (no bare URLs or repeated arrow lines) + named sign-off + P.S.`,
   },
   {
     slug: "hotlist-space-ads",

@@ -22,8 +22,9 @@ export interface PackageBrief {
   /** dominant emotional hooks / angles (fear, greed, curiosity, etc.) */
   hooks: string;
   /**
-   * claim inventory: notable results/numbers in the promo and how each must be
-   * framed (live-verified / backtested / forward-opinion). Drives compliance.
+   * proof points: the notable results/numbers/claims in the promo. Components
+   * pull from these instead of inventing their own. (Field name kept for
+   * stored-package compatibility — no compliance meaning anymore.)
    */
   claimsInventory: string;
   audience: string;

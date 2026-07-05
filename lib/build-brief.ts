@@ -2,8 +2,8 @@
  * Build the shared package brief from an uploaded promo.
  *
  * Runs the promo through Claude to extract the big idea, offer, guru(s), hooks,
- * and — critically — a claim inventory that tells every downstream component how
- * to frame each result (live / backtested / opinion). Then best-effort registers
+ * and the promo's proof points (results/numbers/evidence) so every downstream
+ * component pulls from the promo's own ammunition. Then best-effort registers
  * the promo as a Draft in the Promo Analyzer so it shows there with a 📦 and
  * becomes labeled training data once it launches.
  */
@@ -15,6 +15,7 @@ import { getClient } from "./anthropic";
 import { OPUS_MODEL } from "./models";
 import { detectGuru } from "./brain-reader";
 import { registerDraft } from "./analyzer-client";
+import { ocrPdf } from "./ocr";
 
 const MAX_PROMO_CHARS = 60000;
 const EXCERPT_CHARS = 12000;
@@ -42,7 +43,7 @@ interface ExtractedBriefJSON {
   promoType: string | null;
 }
 
-const EXTRACTION_SYSTEM = `You are a senior analyst for Monument Traders Alliance, a financial trading newsletter publisher. You read an unlaunched promo and produce a tight, structured brief that copywriters will use to generate every secondary component (lift notes, ads, order form, etc.). Be accurate and specific — ground everything in the actual promo. For the claim inventory, this is a compliance-critical field: list each notable result/number/claim in the promo and classify how it must be framed — "live/verified", "backtested", or "forward opinion" — since MTA copy must never present backtested or projected numbers as real, and must never guarantee returns.`;
+const EXTRACTION_SYSTEM = `You are a senior analyst for Monument Traders Alliance, a financial trading newsletter publisher. You read an unlaunched promo and produce a tight, structured brief that copywriters will use to generate every secondary component (lift notes, ads, order form, etc.). Be accurate and specific — ground everything in the actual promo. For the proof points, list every notable result, number, track-record claim, and piece of evidence the promo uses, quoted or closely paraphrased, so downstream copy can pull from the promo's own ammunition instead of inventing its own.`;
 
 function parseJSON(text: string): ExtractedBriefJSON | null {
   try {
@@ -71,7 +72,7 @@ export async function buildBrief(
   "price": "price point + terms if stated, else null",
   "offer": "what's included: subscription, bonuses, reports, guarantee, terms",
   "hooks": "the dominant emotional hooks & angles (fear/greed/curiosity/etc.) and why they work",
-  "claimsInventory": "each notable result/number/claim, and how each must be framed: live-verified vs backtested vs forward-opinion",
+  "claimsInventory": "the promo's proof points: each notable result, number, track-record claim, and piece of evidence it uses",
   "audience": "who this targets",
   "promoType": "Front-end / Backend VSL / Mega-bundle / Hotlist, best guess, or null"
 }
@@ -113,9 +114,14 @@ Return the JSON and nothing else.`;
 
   const parsed = parseJSON(text);
 
-  // Promo text we keep for grounding + registration.
-  const promoText =
+  // Promo text we keep for grounding + registration. Image-only PDFs have no
+  // text layer, so transcribe via Claude vision — otherwise the excerpt every
+  // component grounds itself in (and the analyzer registration) would be empty.
+  let promoText =
     extracted.type === "text" ? extracted.content : extracted.textForFK ?? "";
+  if (!promoText.trim() && extracted.type === "pdf_raw") {
+    promoText = (await ocrPdf(extracted.buffer)) ?? "";
+  }
 
   const gurus = parsed?.gurus?.length
     ? parsed.gurus
@@ -136,7 +142,7 @@ Return the JSON and nothing else.`;
     hooks: parsed?.hooks ?? "",
     claimsInventory:
       parsed?.claimsInventory ??
-      "No claim inventory extracted — treat all specific results conservatively: label backtested/projected numbers as such, no guarantees.",
+      "No proof points extracted — pull results and numbers directly from the promo excerpt.",
     audience: parsed?.audience ?? "Conservative male investors, ~50–70.",
     promoType: hints.isHotlist ? "Hotlist" : parsed?.promoType ?? null,
     promoExcerpt: promoText.slice(0, EXCERPT_CHARS),

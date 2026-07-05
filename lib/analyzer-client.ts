@@ -106,7 +106,11 @@ export async function fetchSupplementalText(
     const buf = Buffer.from(await res.arrayBuffer());
     const { extractFile } = await import("./extract-text");
     const extracted = await extractFile(buf, filename);
-    return extracted.type === "text" ? extracted.content : extracted.textForFK ?? null;
+    if (extracted.type === "text") return extracted.content;
+    if (extracted.textForFK) return extracted.textForFK;
+    // Image-only/scanned PDF — transcribe it with Claude vision.
+    const { ocrPdf } = await import("./ocr");
+    return await ocrPdf(extracted.buffer);
   } catch {
     return null;
   }

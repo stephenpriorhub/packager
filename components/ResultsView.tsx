@@ -127,7 +127,6 @@ export default function ResultsView({
             <div className="space-y-2">
               {inGroup.map((c) => {
                 const busy = regenerating.has(c.slug);
-                const highFindings = c.findings.filter((f) => f.severity === "high").length;
                 return (
                   <div key={c.slug} className="rounded-lg p-3" style={{ background: "var(--surface)" }}>
                     <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -136,13 +135,9 @@ export default function ResultsView({
                         <span className="text-xs" style={{ color: "var(--text-muted)" }}>
                           {c.error ? "failed" : `${c.items.length} ${c.perItem ? "variations" : "doc"}`}
                         </span>
-                        {c.findings.length === 0 && !c.error ? (
-                          <span className="text-xs" style={{ color: "var(--success)" }}>✓ compliant</span>
-                        ) : c.findings.length > 0 ? (
-                          <span className="text-xs" style={{ color: highFindings ? "var(--danger)" : "var(--warn)" }}>
-                            ⚠ {c.findings.length} claim{c.findings.length > 1 ? "s" : ""} to review
-                          </span>
-                        ) : null}
+                        {!c.error && (
+                          <span className="text-xs" style={{ color: "var(--success)" }}>✓ ready</span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 text-xs">
                         {busy ? (
@@ -206,17 +201,6 @@ export default function ResultsView({
               <h3 className="font-bold">{preview.label}</h3>
               <button onClick={() => setPreviewSlug(null)} className="text-sm" style={{ color: "var(--text-muted)" }}>✕</button>
             </div>
-
-            {preview.findings.length > 0 && (
-              <div className="rounded-lg p-3 mb-3 text-xs" style={{ background: "var(--surface)", border: "1px solid var(--warn)" }}>
-                <p className="font-semibold mb-1" style={{ color: "var(--warn)" }}>Claims to review:</p>
-                {preview.findings.map((f, i) => (
-                  <div key={i} className="mb-1">
-                    <span style={{ color: "var(--warn)" }}>[{f.severity}]</span> "{f.quote}" — {f.issue}. <em>Fix: {f.fix}</em>
-                  </div>
-                ))}
-              </div>
-            )}
 
             {preview.items.map((item, i) => (
               <div key={i} className="mb-4">

@@ -22,7 +22,15 @@ import {
 import { listTrainingEntries, componentItems, type TrainingEntry } from "./training-store";
 
 const MAX_EXEMPLARS = 3;
-const EXEMPLAR_CHARS = 1500;
+
+/**
+ * Per-item components (lifts, ads) are short — 1500 chars captures a whole
+ * piece. Single-doc long-form pages (order form, upsell) need the full page
+ * visible or the model never sees the structure it's meant to mirror.
+ */
+function exemplarChars(spec: ComponentSpec): number {
+  return spec.perItem ? 1500 : 8000;
+}
 
 // Cache the live review list for the duration of a generation run.
 let reviewCache: { at: number; reviews: AnalyzerReviewSummary[] } | null = null;
@@ -68,8 +76,8 @@ function rank(src: RankableSource, brief: PackageBrief): number {
   return s;
 }
 
-function formatExemplar(title: string, tierNote: string, gurus: string[], text: string): string {
-  return `— Example from "${title}" (${tierNote}${gurus.length ? `, ${gurus.join("/")}` : ""}):\n${text.slice(0, EXEMPLAR_CHARS)}`;
+function formatExemplar(title: string, tierNote: string, gurus: string[], text: string, chars: number): string {
+  return `— Example from "${title}" (${tierNote}${gurus.length ? `, ${gurus.join("/")}` : ""}):\n${text.slice(0, chars)}`;
 }
 
 /**
@@ -109,7 +117,7 @@ function curatedExemplars(spec: ComponentSpec, brief: PackageBrief): string[] {
         : entry.hasPerformanceData
         ? "proven promo"
         : "trained example";
-      out.push(formatExemplar(entry.title, tier, entry.gurus, item));
+      out.push(formatExemplar(entry.title, tier, entry.gurus, item, exemplarChars(spec)));
       took = true;
     }
     if (!took) break; // all pools exhausted
@@ -161,7 +169,7 @@ async function liveExemplars(spec: ComponentSpec, brief: PackageBrief, needed: n
     const text = await fetchSupplementalText(review.id, file.id, file.filename);
     if (!text) continue;
     const tier = review.training?.isBestPerformer ? "best performer" : "past promo";
-    out.push(formatExemplar(review.displayName ?? review.filename ?? "a promo", tier, review.gurus ?? [], text));
+    out.push(formatExemplar(review.displayName ?? review.filename ?? "a promo", tier, review.gurus ?? [], text, exemplarChars(spec)));
   }
   return out;
 }

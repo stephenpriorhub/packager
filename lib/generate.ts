@@ -3,8 +3,9 @@
  *
  * Handles: RAG exemplar lookup, batching high-count components to protect
  * quality, the mixed-voice 80/20 split for lift notes, the editorial guide's
- * live web search, output parsing, and the claims-integrity gate. Component
- * generation is independent, so the API route fans these out in parallel.
+ * live web search, and output parsing. Component generation is independent,
+ * so the API route fans these out in parallel. No compliance pass — legal
+ * review happens downstream by humans (Stephen's call, 2026-07-05).
  */
 
 import type { ComponentSpec } from "./components";
@@ -14,7 +15,6 @@ import { getClient } from "./anthropic";
 import { modelFor } from "./models";
 import { buildComponentPrompt, ITEM_DELIM } from "./prompts/build";
 import { buildRagBlock } from "./rag";
-import { reviewClaims, type ClaimsFinding } from "./claims-gate";
 
 export interface GeneratedItem {
   text: string;
@@ -27,7 +27,6 @@ export interface GeneratedComponent {
   group: string;
   perItem: boolean;
   items: GeneratedItem[];
-  findings: ClaimsFinding[];
   error?: string;
 }
 
@@ -89,7 +88,7 @@ export async function generateComponent(
   brief: PackageBrief,
   corpus: MethodologyCorpus
 ): Promise<GeneratedComponent> {
-  const base: Omit<GeneratedComponent, "items" | "findings"> = {
+  const base: Omit<GeneratedComponent, "items"> = {
     slug: spec.slug,
     label: spec.label,
     group: spec.group,
@@ -137,15 +136,11 @@ export async function generateComponent(
       items = results.flat();
     }
 
-    // Claims-integrity gate on the assembled component text.
-    const findings = await reviewClaims(spec.label, items.map((i) => i.text).join("\n\n"));
-
-    return { ...base, items, findings };
+    return { ...base, items };
   } catch (err) {
     return {
       ...base,
       items: [],
-      findings: [],
       error: err instanceof Error ? err.message : "Generation failed",
     };
   }
@@ -153,7 +148,7 @@ export async function generateComponent(
 
 /**
  * Regenerate a single component, optionally steered by copywriter feedback
- * (e.g. "more urgency") and/or the claims-gate findings to fix.
+ * (e.g. "more urgency").
  */
 export async function regenerateComponent(
   spec: ComponentSpec,

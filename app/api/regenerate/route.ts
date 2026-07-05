@@ -1,7 +1,7 @@
 /**
  * Regenerate a single component, optionally steered by copywriter feedback
- * (e.g. "more urgency") or the claims-gate findings. Updates the stored package
- * and returns the fresh component.
+ * (e.g. "more urgency"). Updates the stored package and returns the fresh
+ * component.
  */
 
 import type { NextRequest } from "next/server";
