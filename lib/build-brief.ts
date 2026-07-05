@@ -78,8 +78,19 @@ export async function buildBrief(
 }
 Return the JSON and nothing else.`;
 
+  // Get usable promo text up front. Image-only PDFs have no text layer, so
+  // transcribe via the Files-API OCR first — that text then feeds the brief
+  // extraction, the grounding excerpt, and the analyzer registration alike.
+  let promoText =
+    extracted.type === "text" ? extracted.content : extracted.textForFK ?? "";
+  if (!promoText.trim() && extracted.type === "pdf_raw") {
+    promoText = (await ocrPdf(extracted.buffer)) ?? "";
+  }
+
+  // Last resort when OCR failed on a raw PDF: hand the PDF bytes to vision
+  // inline (only viable for small files — the API caps request size).
   const content: Anthropic.MessageParam["content"] =
-    extracted.type === "pdf_raw" && !extracted.textForFK
+    !promoText.trim() && extracted.type === "pdf_raw"
       ? [
           {
             type: "document",
@@ -94,9 +105,7 @@ Return the JSON and nothing else.`;
       : [
           {
             type: "text",
-            text: `${instruction}\n\n━━━ PROMO ━━━\n${(
-              extracted.type === "text" ? extracted.content : extracted.textForFK ?? ""
-            ).slice(0, MAX_PROMO_CHARS)}`,
+            text: `${instruction}\n\n━━━ PROMO ━━━\n${promoText.slice(0, MAX_PROMO_CHARS)}`,
           },
         ];
 
@@ -114,14 +123,6 @@ Return the JSON and nothing else.`;
 
   const parsed = parseJSON(text);
 
-  // Promo text we keep for grounding + registration. Image-only PDFs have no
-  // text layer, so transcribe via Claude vision — otherwise the excerpt every
-  // component grounds itself in (and the analyzer registration) would be empty.
-  let promoText =
-    extracted.type === "text" ? extracted.content : extracted.textForFK ?? "";
-  if (!promoText.trim() && extracted.type === "pdf_raw") {
-    promoText = (await ocrPdf(extracted.buffer)) ?? "";
-  }
 
   const gurus = parsed?.gurus?.length
     ? parsed.gurus

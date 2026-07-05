@@ -24,7 +24,10 @@ export async function splitItems(category: string, text: string): Promise<string
 
   try {
     const client = getClient();
-    const resp = await client.messages.create({
+    // Streamed: with max_tokens > ~21k the SDK throws "Streaming is required"
+    // on non-streaming calls — which made this split silently fall back to
+    // one-blob-per-doc in production.
+    const stream = client.messages.stream({
       model: SONNET_MODEL,
       max_tokens: 32000,
       system: SPLIT_SYSTEM,
@@ -35,6 +38,7 @@ export async function splitItems(category: string, text: string): Promise<string
         },
       ],
     });
+    const resp = await stream.finalMessage();
     const out = resp.content
       .filter((b) => b.type === "text")
       .map((b) => (b as { text: string }).text)
