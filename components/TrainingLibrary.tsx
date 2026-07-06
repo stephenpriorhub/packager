@@ -154,13 +154,12 @@ export default function TrainingLibrary() {
         <div className="space-y-2">
           {shown.map((r) => {
             const isBusy = busy.has(r.reviewId);
-            const perf = r.isBestPerformer
-              ? "★ Best performer"
-              : r.performanceScore != null
-              ? `Perf ${r.performanceScore}/10`
-              : r.effectivenessScore != null
-              ? `Copy ${r.effectivenessScore}/10`
-              : null;
+            const perf =
+              r.performanceScore != null
+                ? `Perf ${r.performanceScore}/10`
+                : r.effectivenessScore != null
+                ? `Copy ${r.effectivenessScore}/10`
+                : null;
             return (
               <div key={r.reviewId} className="rounded-lg p-3" style={{ background: "var(--surface)" }}>
                 <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -171,9 +170,7 @@ export default function TrainingLibrary() {
                     </p>
                     <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                       {[r.publisher, r.gurus.join("/"), r.promoType].filter(Boolean).join(" · ") || "—"}
-                      {perf ? (
-                        <span style={{ color: r.isBestPerformer ? "var(--warn)" : undefined }}> · {perf}</span>
-                      ) : null}
+                      {perf ? <span> · {perf}</span> : null}
                     </p>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">

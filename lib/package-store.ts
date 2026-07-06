@@ -68,8 +68,15 @@ export function updateComponent(packageId: string, component: GeneratedComponent
   writeAll(all);
 }
 
-export function listPackages(): Array<Pick<StoredPackage, "id" | "createdAt" | "brief">> {
+export function listPackages(): Array<
+  Pick<StoredPackage, "id" | "createdAt" | "brief"> & { componentCount: number }
+> {
   return readAll()
-    .map((p) => ({ id: p.id, createdAt: p.createdAt, brief: p.brief }))
+    .map((p) => ({
+      id: p.id,
+      createdAt: p.createdAt,
+      brief: p.brief,
+      componentCount: p.components.filter((c) => !c.error).length,
+    }))
     .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
 }

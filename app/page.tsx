@@ -5,6 +5,7 @@ import UploadForm, { type GeneratePayload } from "@/components/UploadForm";
 import GeneratingView, { type CompStatus } from "@/components/GeneratingView";
 import ResultsView from "@/components/ResultsView";
 import TrainingLibrary from "@/components/TrainingLibrary";
+import PackageLibrary from "@/components/PackageLibrary";
 import { componentsForRun } from "@/lib/components";
 import type { GeneratedComponent } from "@/lib/generate";
 import type { PackageBrief } from "@/lib/brief";
@@ -17,7 +18,7 @@ interface Row {
 }
 
 export default function Home() {
-  const [tab, setTab] = useState<"generate" | "training">("generate");
+  const [tab, setTab] = useState<"generate" | "packages" | "training">("generate");
   const [phase, setPhase] = useState<Phase>("upload");
   const [message, setMessage] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
@@ -75,6 +76,18 @@ export default function Home() {
     }
   }
 
+  async function openPackage(id: string) {
+    const res = await fetch(`/api/packages?id=${encodeURIComponent(id)}`, { cache: "no-store" });
+    if (!res.ok) throw new Error("Package not found");
+    const { package: pkg } = await res.json();
+    setError("");
+    setBrief(pkg.brief);
+    setComponents(pkg.components);
+    setPackageId(pkg.id);
+    setPhase("results");
+    setTab("generate");
+  }
+
   function handleEvent(evt: Record<string, unknown>) {
     switch (evt.type) {
       case "status":
@@ -117,6 +130,7 @@ export default function Home() {
         {(
           [
             { id: "generate", label: "📦 Generate" },
+            { id: "packages", label: "📁 Past Packages" },
             { id: "training", label: "🎓 Training Library" },
           ] as const
         ).map((t) => (
@@ -136,6 +150,8 @@ export default function Home() {
       </div>
 
       {tab === "training" && <TrainingLibrary />}
+
+      {tab === "packages" && <PackageLibrary onOpen={openPackage} />}
 
       {tab === "generate" && error && (
         <div className="max-w-2xl mx-auto mt-4 px-4">
