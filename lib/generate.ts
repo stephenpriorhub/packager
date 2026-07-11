@@ -11,6 +11,7 @@
 import type { ComponentSpec } from "./components";
 import type { PackageBrief } from "./brief";
 import type { MethodologyCorpus } from "./brain-reader";
+import { type CatalystResult, NO_CATALYSTS } from "./catalysts";
 import { getClient } from "./anthropic";
 import { modelFor } from "./models";
 import { buildComponentPrompt, ITEM_DELIM } from "./prompts/build";
@@ -19,6 +20,8 @@ import { buildRagBlock } from "./rag";
 export interface GeneratedItem {
   text: string;
   voice?: "third" | "guru";
+  /** set when this item is built around a live, related market catalyst */
+  catalyst?: string;
 }
 
 export interface GeneratedComponent {
@@ -45,14 +48,23 @@ function extractVoice(text: string): { text: string; voice?: "third" | "guru" } 
   return { text: cleaned, voice };
 }
 
+/** Strip a standalone "ACTIVE CATALYST: xxx" tag and report which catalyst it named. */
+function extractCatalyst(text: string): { text: string; catalyst?: string } {
+  const m = text.match(/^\s*ACTIVE CATALYST:\s*(.+)$/im);
+  const catalyst = m ? m[1].trim() : undefined;
+  const cleaned = text.replace(/^\s*ACTIVE CATALYST:\s*.+$/im, "").trim();
+  return { text: cleaned, catalyst };
+}
+
 function parseItems(raw: string): GeneratedItem[] {
   return raw
     .split(new RegExp(`^\\s*${ITEM_DELIM}\\s*$`, "m"))
     .map((s) => s.trim())
     .filter(Boolean)
     .map((block) => {
-      const { text, voice } = extractVoice(block);
-      return { text, voice };
+      const { text: v, voice } = extractVoice(block);
+      const { text, catalyst } = extractCatalyst(v);
+      return { text, voice, catalyst };
     });
 }
 
@@ -86,7 +98,8 @@ async function callModel(
 export async function generateComponent(
   spec: ComponentSpec,
   brief: PackageBrief,
-  corpus: MethodologyCorpus
+  corpus: MethodologyCorpus,
+  catalysts: CatalystResult = NO_CATALYSTS
 ): Promise<GeneratedComponent> {
   const base: Omit<GeneratedComponent, "items"> = {
     slug: spec.slug,
@@ -102,7 +115,7 @@ export async function generateComponent(
     let items: GeneratedItem[] = [];
 
     if (!spec.perItem) {
-      const { system, user, maxTokens } = buildComponentPrompt(spec, brief, corpus, 1, 0, ragBlock);
+      const { system, user, maxTokens } = buildComponentPrompt(spec, brief, corpus, 1, 0, ragBlock, catalysts);
       const text = await callModel(system, user, maxTokens, model, !!spec.usesWebSearch);
       const { text: cleaned, voice } = extractVoice(text);
       items = [{ text: cleaned, voice }];
@@ -128,7 +141,8 @@ export async function generateComponent(
             corpus,
             n,
             guruCount,
-            ragBlock
+            ragBlock,
+            catalysts
           );
           return callModel(system, user, maxTokens, model, !!spec.usesWebSearch).then(parseItems);
         })
@@ -154,11 +168,12 @@ export async function regenerateComponent(
   spec: ComponentSpec,
   brief: PackageBrief,
   corpus: MethodologyCorpus,
-  feedback: string
+  feedback: string,
+  catalysts: CatalystResult = NO_CATALYSTS
 ): Promise<GeneratedComponent> {
   const steered: MethodologyCorpus = corpus;
   const briefWithFeedback: PackageBrief = feedback
     ? { ...brief, hooks: `${brief.hooks}\n\nCOPYWRITER FEEDBACK FOR THIS REGENERATION (apply it): ${feedback}` }
     : brief;
-  return generateComponent(spec, briefWithFeedback, steered);
+  return generateComponent(spec, briefWithFeedback, steered, catalysts);
 }

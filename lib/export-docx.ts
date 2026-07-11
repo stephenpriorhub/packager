@@ -81,6 +81,17 @@ function itemHeading(label: string, n: number, voice?: string): Paragraph {
   });
 }
 
+/** Editor-facing tag when an item is built around a live catalyst. */
+function catalystNote(catalyst: string): Paragraph {
+  return new Paragraph({
+    children: [
+      new TextRun({ text: "⚡ Active catalyst: ", bold: true, size: 20, color: ACCENT }),
+      new TextRun({ text: catalyst, italics: true, size: 20, color: "666666" }),
+    ],
+    spacing: { after: 100 },
+  });
+}
+
 export async function buildComponentDocx(
   component: GeneratedComponent,
   promoTitle: string
@@ -105,6 +116,7 @@ export async function buildComponentDocx(
   if (component.perItem) {
     component.items.forEach((item, i) => {
       children.push(itemHeading(component.label, i + 1, item.voice));
+      if (item.catalyst) children.push(catalystNote(item.catalyst));
       children.push(...copyToParagraphs(item.text));
     });
   } else {

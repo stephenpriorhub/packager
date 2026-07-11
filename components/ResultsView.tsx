@@ -138,6 +138,11 @@ export default function ResultsView({
                         {!c.error && (
                           <span className="text-xs" style={{ color: "var(--success)" }}>✓ ready</span>
                         )}
+                        {c.items.some((it) => it.catalyst) && (
+                          <span className="text-xs" style={{ color: "var(--accent)" }}>
+                            ⚡ {c.items.filter((it) => it.catalyst).length} catalyst
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 text-xs">
                         {busy ? (
@@ -208,6 +213,11 @@ export default function ResultsView({
                   <div className="text-xs font-bold mb-1" style={{ color: "var(--accent)" }}>
                     {preview.label} #{i + 1}
                     {item.voice === "guru" ? "  (guru voice)" : ""}
+                  </div>
+                )}
+                {item.catalyst && (
+                  <div className="text-xs mb-1" style={{ color: "var(--accent)" }}>
+                    ⚡ Active catalyst: <span style={{ color: "var(--text-muted)" }}>{item.catalyst}</span>
                   </div>
                 )}
                 <pre className="whitespace-pre-wrap text-sm" style={{ fontFamily: "inherit" }}>

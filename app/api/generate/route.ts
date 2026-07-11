@@ -19,6 +19,7 @@ import { extractFile } from "@/lib/extract-text";
 import { buildBrief } from "@/lib/build-brief";
 import { loadMethodology } from "@/lib/brain-reader";
 import { componentsForRun, type ComponentSpec } from "@/lib/components";
+import { findActiveCatalysts } from "@/lib/catalysts";
 import { generateComponent } from "@/lib/generate";
 import { runPool } from "@/lib/pool";
 import { savePackage, updateComponent, type StoredPackage } from "@/lib/package-store";
@@ -79,6 +80,14 @@ export async function POST(req: NextRequest) {
 
         const corpus = await loadMethodology(brief.primaryGuru);
 
+        // Best-effort: look up live, related market catalysts once for the run.
+        // Lift notes and space ads may weave these in (tagged "active catalyst").
+        send({ type: "status", message: "Scanning for live, related market catalysts…" });
+        const catalysts = await findActiveCatalysts(brief);
+        if (catalysts.hasCatalysts) {
+          send({ type: "status", message: "Found live catalysts — weaving them into lifts & space ads." });
+        }
+
         // Apply quantity overrides (clamped to each spec's min/max).
         const specs: ComponentSpec[] = componentsForRun(includeHotlist).map((c) => {
           const o = overrides[c.slug];
@@ -104,7 +113,7 @@ export async function POST(req: NextRequest) {
 
         await runPool(specs, COMPONENT_CONCURRENCY, async (spec, index) => {
           send({ type: "start", slug: spec.slug, label: spec.label, index, total });
-          const component = await generateComponent(spec, brief, corpus);
+          const component = await generateComponent(spec, brief, corpus, catalysts);
           pkg.components.push(component);
           updateComponent(pkg.id, component);
           completed++;

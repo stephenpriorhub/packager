@@ -10,8 +10,10 @@
  */
 
 import type { ComponentSpec } from "../components";
+import { usesCatalysts } from "../components";
 import type { PackageBrief } from "../brief";
 import type { MethodologyCorpus } from "../brain-reader";
+import { type CatalystResult, NO_CATALYSTS } from "../catalysts";
 import {
   buildWritingRulesBlock,
   buildLiftCraftBlock,
@@ -80,7 +82,29 @@ function formatRules(spec: ComponentSpec, hasExemplars: boolean): string {
   if (spec.perItem) {
     rules.push(`- No two items in the set may open the same way or lean on the same crutch phrase.`);
   }
+  // Angle-variety mandate for the high-variety pieces (Stephen, 2026-07-11).
+  const wantsAngleVariety = spec.perItem && (spec.group === "Ad" || spec.slug.includes("lift-notes"));
+  if (wantsAngleVariety) {
+    rules.push(
+      `- VARIETY MANDATE: the set must span genuinely DIFFERENT angles — not one hook reworded. Rotate across distinct angle families (curiosity/mystery, fear/warning, track-record/proof, direct-benefit, contrarian/pattern-interrupt, deadline/scarcity, story/secret, news/catalyst hook). Consecutive items must not share an angle, and no single angle should dominate the set.`
+    );
+  }
   return rules.join("\n");
+}
+
+/**
+ * Live-catalyst block for the pieces that may use one (lift notes, space ads).
+ * The catalysts are already web-verified; the model's only job is to decide
+ * whether one is genuinely relevant and, if so, tag the items that use it.
+ */
+function catalystBlock(spec: ComponentSpec, catalysts: CatalystResult): string {
+  if (!catalysts.hasCatalysts || !usesCatalysts(spec)) return "";
+  return [
+    `━━━ LIVE CATALYSTS (web-verified, current as of today) ━━━`,
+    catalysts.block,
+    ``,
+    `USING CATALYSTS: If — and ONLY if — one of the catalysts above is genuinely relevant to this promo's theme, you MAY build 1–2 items in this set around it to add timeliness (this counts as the "news/catalyst" angle in the variety mix). For any item you do, add a final line exactly like "ACTIVE CATALYST: <which catalyst>" — this is an internal tag for the editor, NOT part of the reader-facing copy. Keep the rest of the set evergreen. Never force an unrelated catalyst and never invent one that isn't listed above.`,
+  ].join("\n");
 }
 
 function outputContract(spec: ComponentSpec, n: number): string {
@@ -132,7 +156,8 @@ export function buildComponentPrompt(
   corpus: MethodologyCorpus,
   n: number,
   guruCount: number,
-  ragBlock: string
+  ragBlock: string,
+  catalysts: CatalystResult = NO_CATALYSTS
 ): BuiltPrompt {
   const system = [
     PERSONA,
@@ -152,6 +177,7 @@ export function buildComponentPrompt(
     ``,
     formatRules(spec, !!ragBlock),
     ``,
+    catalystBlock(spec, catalysts),
     `━━━ BRIEF ━━━`,
     briefBlock(brief),
     ragBlock
@@ -163,11 +189,15 @@ export function buildComponentPrompt(
     .filter((l) => l !== ``)
     .join("\n");
 
-  // Budget tokens by expected size.
+  // Budget tokens by expected size. Order forms are long-form closes — give
+  // them room to match proven-example length (kept < ~21k so the non-streaming
+  // SDK call doesn't throw "Streaming is required").
   const maxTokens = spec.perItem
     ? Math.min(16000, Math.max(2500, n * 800 + 800))
     : spec.slug === "editorial-guide"
     ? 4000
+    : spec.slug === "order-form"
+    ? 16000
     : 9000;
 
   return { system, user, maxTokens };

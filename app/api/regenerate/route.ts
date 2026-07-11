@@ -8,8 +8,9 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/hub-auth";
 import { getPackage, updateComponent } from "@/lib/package-store";
-import { getComponent } from "@/lib/components";
+import { getComponent, usesCatalysts } from "@/lib/components";
 import { loadMethodology } from "@/lib/brain-reader";
+import { findActiveCatalysts, NO_CATALYSTS } from "@/lib/catalysts";
 import { regenerateComponent } from "@/lib/generate";
 
 export const runtime = "nodejs";
@@ -39,7 +40,8 @@ export async function POST(req: NextRequest) {
       : spec;
 
   const corpus = await loadMethodology(pkg.brief.primaryGuru);
-  const component = await regenerateComponent(runSpec, pkg.brief, corpus, feedback ?? "");
+  const catalysts = usesCatalysts(runSpec) ? await findActiveCatalysts(pkg.brief) : NO_CATALYSTS;
+  const component = await regenerateComponent(runSpec, pkg.brief, corpus, feedback ?? "", catalysts);
   updateComponent(packageId, component);
 
   return NextResponse.json({ component });

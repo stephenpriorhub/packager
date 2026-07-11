@@ -76,7 +76,8 @@ Format each like a real MTA lift: a "Dear [audience] Reader/Member," salutation,
     batchSize: 10,
     tier: "sonnet",
     voice: "third",
-    instructions: `Short display/space ads that drive a click to the promo. Each: a punchy headline, 2–4 lines of body building curiosity, and a clear CTA. Tease, don't reveal. Vary the hook angle across the set.`,
+    instructions: `Short display/space ads that drive a click to the promo. Each: a punchy headline, 2–4 lines of body building curiosity, and a clear CTA. Tease, don't reveal.
+VARIETY IS CRITICAL: rotate across genuinely DIFFERENT angles across the set — curiosity/mystery, fear/warning, track-record/proof, direct-benefit, contrarian/pattern-interrupt, deadline/scarcity, story/secret, and (when a live catalyst is supplied) a timely news/catalyst hook. Never the same hook reworded; no two consecutive ads share an angle and no single angle dominates the set.`,
   },
   {
     slug: "short-text-ads",
@@ -182,7 +183,8 @@ Format each like a real MTA lift: a "Dear [audience] Reader/Member," salutation,
 5. THE GUARANTEE (365-day money-back is the MTA norm — and they keep all the reports) presented as total risk-reversal, with its own subhead.
 6. URGENCY to complete the order now (real reasons from the offer: deadline, limited spots, price going up).
 7. FINAL CTA leading into the card fields, plus a one-line reassurance under the button.
-Write real finished copy for every section — no placeholders, no summaries. Apply the sales-letter frameworks invisibly.`,
+Write real finished copy for every section — no placeholders, no summaries. Apply the sales-letter frameworks invisibly.
+LENGTH & STRUCTURE: Order forms are long-form closes, not summaries. Study the proven examples below and MATCH their length AND section structure — the order of sections, how the value stack is laid out, where the guarantee and price framing sit, the rhythm of the close. If the examples run long and fully itemized, yours must too: name and sell every bonus/report/perk on its own line rather than compressing the offer. Do not cut the page short to save space.`,
   },
   {
     slug: "lifetime-upsell",
@@ -244,7 +246,8 @@ const HOTLIST: ComponentSpec[] = [
     batchSize: 10,
     tier: "sonnet",
     voice: "third",
-    instructions: `Short space/display ads driving event registration. Headline + curiosity body + registration CTA ("Reserve Your Seat"). Tie to the event date and seat scarcity. Vary angles.`,
+    instructions: `Short space/display ads driving event registration. Headline + curiosity body + registration CTA ("Reserve Your Seat"). Tie to the event date and seat scarcity.
+VARIETY IS CRITICAL: rotate across genuinely DIFFERENT angles across the set — curiosity/mystery, fear/warning, track-record/proof, direct-benefit, contrarian/pattern-interrupt, deadline/seat-scarcity, story/secret, and (when a live catalyst is supplied) a timely news/catalyst hook. Never the same hook reworded; no two consecutive ads share an angle.`,
   },
   {
     slug: "hotlist-warmup-emails",
@@ -299,4 +302,12 @@ export function getComponent(slug: string): ComponentSpec | undefined {
 /** The components to generate for a run, given the Hotlist toggle. */
 export function componentsForRun(includeHotlist: boolean): ComponentSpec[] {
   return ALL_COMPONENTS.filter((c) => (c.hotlist ? includeHotlist : true));
+}
+
+/**
+ * Whether a component may weave in a live "active catalyst" (Stephen, 2026-07-11).
+ * Scoped to lift notes and space ads — the timely, high-variety pieces.
+ */
+export function usesCatalysts(spec: ComponentSpec): boolean {
+  return spec.slug.includes("lift-notes") || spec.slug.includes("space-ads");
 }
