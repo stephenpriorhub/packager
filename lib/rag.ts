@@ -174,11 +174,103 @@ async function liveExemplars(spec: ComponentSpec, brief: PackageBrief, needed: n
   return out;
 }
 
+// ── Headline exemplars (Alternative Headlines) ─────────────────────────────────
+//
+// Different source from the component-doc RAG above: the analyzer already
+// extracts every reviewed promo's eyebrow / main headline / subheadline (plus a
+// 4 U's verdict) into `sections.headline`. We surface the best-performing ones
+// FROM THE SAME PRICE TIER as the promo being packaged — Stephen's rule:
+// frontends are cheap (< $500), backends are expensive. No separate training.
+
+type PriceTier = "frontend" | "backend";
+
+/** Stephen's threshold: frontends run under $500; everything pricier is a backend. */
+const FRONTEND_MAX = 500;
+const MAX_HEADLINE_EXEMPLARS = 5;
+
+/** Lowest dollar figure in a price string — the ask price defines the tier. */
+function parsePrice(s: string | null | undefined): number | null {
+  if (!s) return null;
+  const amts = [...s.matchAll(/\$\s?([0-9][0-9,]*(?:\.[0-9]{1,2})?)/g)]
+    .map((m) => Number(m[1].replace(/,/g, "")))
+    .filter((n) => Number.isFinite(n));
+  return amts.length ? Math.min(...amts) : null;
+}
+
+/** Analyzer promo-type → tier (manual/curated type wins over a raw price guess). */
+function tierFromType(promoType: string | null | undefined): PriceTier | null {
+  if (!promoType) return null;
+  const t = promoType.toLowerCase();
+  if (t.includes("front")) return "frontend";
+  if (t.includes("backend") || t.includes("mega")) return "backend";
+  return null;
+}
+
+function tierOf(price: number | null, promoType: string | null | undefined): PriceTier | null {
+  return tierFromType(promoType) ?? (price != null ? (price < FRONTEND_MAX ? "frontend" : "backend") : null);
+}
+
+function briefTier(brief: PackageBrief): PriceTier | null {
+  return tierOf(parsePrice(brief.price), brief.promoType);
+}
+
+function headlineExemplars(brief: PackageBrief, reviews: AnalyzerReviewSummary[]): string[] {
+  const want = briefTier(brief);
+  const scored = reviews
+    .filter((r) => (r.sections?.headline ?? "").trim().length > 0)
+    .map((r) => ({
+      r,
+      tier: tierOf(r.pricePoint ?? null, r.promoType),
+      score: rank(
+        {
+          isBestPerformer: !!r.training?.isBestPerformer,
+          performanceScore: r.training?.performanceScore ?? null,
+          effectivenessScore: r.effectivenessScore ?? null,
+          gurus: r.gurus ?? [],
+          publisher: r.publisher ?? null,
+          promoType: r.promoType ?? null,
+        },
+        brief
+      ),
+    }));
+
+  // Same-tier first; fall back to the whole pool so a thin analyzer still helps.
+  const sameTier = want ? scored.filter((x) => x.tier === want) : [];
+  const pool = (sameTier.length ? sameTier : scored).sort((a, b) => b.score - a.score);
+
+  return pool.slice(0, MAX_HEADLINE_EXEMPLARS).map(({ r, tier }) => {
+    const perf = r.training?.isBestPerformer
+      ? "best performer"
+      : r.hasPerformanceData
+      ? "proven promo"
+      : r.effectivenessScore != null
+      ? `analyzer score ${r.effectivenessScore}`
+      : "reviewed promo";
+    const tierNote = tier ? `${tier} tier` : r.promoType ?? "tier n/a";
+    const gurus = (r.gurus ?? []).length ? `, ${(r.gurus ?? []).join("/")}` : "";
+    const name = r.displayName ?? r.filename ?? "a promo";
+    return `— From "${name}" (${tierNote}, ${perf}${gurus}):\n${(r.sections?.headline ?? "").trim().slice(0, 1200)}`;
+  });
+}
+
+/** Best-performing same-tier headline blocks from the analyzer. Empty if none. */
+async function buildHeadlineRagBlock(brief: PackageBrief): Promise<string> {
+  let reviews: AnalyzerReviewSummary[];
+  try {
+    reviews = await getReviews();
+  } catch {
+    return "";
+  }
+  return headlineExemplars(brief, reviews).join("\n\n");
+}
+
 /**
  * Build the few-shot exemplar block for one component. Curated pool first,
  * live auto-selection to fill remaining slots. Empty string when nothing found.
  */
 export async function buildRagBlock(spec: ComponentSpec, brief: PackageBrief): Promise<string> {
+  // Alternative Headlines learn from analyzer headline sections, not component docs.
+  if (spec.slug === "alternative-headlines") return buildHeadlineRagBlock(brief);
   const curated = curatedExemplars(spec, brief);
   const exemplars = [...curated];
   if (exemplars.length < MAX_EXEMPLARS) {

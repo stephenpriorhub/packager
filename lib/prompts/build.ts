@@ -34,11 +34,14 @@ function methodologyFor(spec: ComponentSpec, corpus: MethodologyCorpus): string 
   const blocks: string[] = [];
   const isLift = spec.slug.includes("lift-notes");
   const isLongForm = spec.slug === "order-form" || spec.slug === "lifetime-upsell";
+  const isHeadline = spec.slug === "alternative-headlines";
   if (isLift) {
     blocks.push(buildLiftCraftBlock(corpus));
     if (spec.voice === "mixed") blocks.push(buildGuruVoiceBlock(corpus));
   }
-  if (isLongForm) blocks.push(buildSalesLetterBlock(corpus));
+  // The 16-Word Sales Letter / Copy-Boarding frameworks are the brain's headline
+  // & lead craft — route them to the long-form pages and to headline generation.
+  if (isLongForm || isHeadline) blocks.push(buildSalesLetterBlock(corpus));
   if (
     (spec.group === "Ad" || spec.slug.includes("facebook") || spec.slug.includes("youtube")) &&
     corpus.socialTactics
@@ -181,7 +184,9 @@ export function buildComponentPrompt(
     `━━━ BRIEF ━━━`,
     briefBlock(brief),
     ragBlock
-      ? `\n━━━ PROVEN EXAMPLES (real MTA winners — mirror their FORMAT and craft; do NOT copy their content) ━━━\n${ragBlock}`
+      ? spec.slug === "alternative-headlines"
+        ? `\n━━━ WINNING HEADLINES FROM SIMILAR PROMOS (same price tier, best performers — each shows the promo's eyebrow / headline / subhead and a 4 U's read; study WHAT made them work and the range of shapes, do NOT reuse their wording or their specific claims) ━━━\n${ragBlock}`
+        : `\n━━━ PROVEN EXAMPLES (real MTA winners — mirror their FORMAT and craft; do NOT copy their content) ━━━\n${ragBlock}`
       : ``,
     ``,
     outputContract(spec, n),

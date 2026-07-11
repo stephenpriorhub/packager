@@ -45,6 +45,37 @@ export interface ComponentSpec {
 
 const STANDARD: ComponentSpec[] = [
   {
+    slug: "alternative-headlines",
+    label: "Alternative Headlines",
+    group: "Page",
+    hotlist: false,
+    defaultQty: 5,
+    minQty: 3,
+    maxQty: 10,
+    perItem: true,
+    // Generate the whole set in ONE call so the model can deliberately vary the
+    // mix (lengths, eyebrow-or-not, subhead length) across the batch.
+    batchSize: 10,
+    tier: "opus",
+    voice: "third",
+    instructions: `Alternative HEADLINE COMPLEXES for the top of this promo's sales letter / VSL — the single highest-leverage copy on the page. Each is a fresh way to open the SAME promo (same big idea, same offer), NOT a new promo. Tease the payoff; never fully reveal the mechanism.
+A "headline complex" has up to three parts:
+- EYEBROW: an optional short pre-headline / kicker above the main headline (a label, callout, or set-up line). Some complexes should HAVE one, some should not.
+- HEADLINE: the main headline — the promise/hook.
+- SUBHEAD: an optional supporting line that expands or specifies the headline. Vary this: some long and expansive, some short, some omitted.
+DELIBERATELY MIX THE SET so a copy chief has genuinely different shapes to test — do NOT produce five variations of one format:
+- Length: some short/punchy headlines (~5–9 words), some longer, more specific headlines.
+- Eyebrow: roughly half WITH an eyebrow, roughly half without.
+- Subhead: mix long subheads, short subheads, and a couple with no subhead at all.
+- Angle: rotate across curiosity, direct-benefit, fear/warning, track-record/proof, contrarian, and news-hook — no two complexes leaning on the same angle.
+Each complex should hit at least two of the 4 U's (urgent, unique, ultra-specific, useful) — all four is excellent but never forced. Learn what that looks like from the winning examples above rather than from a definition; do NOT explain or label the U's in your output. Ground specifics in the promo's real proof points/numbers; never invent figures.
+For EACH complex, output these labeled fields in order:
+EYEBROW: <the eyebrow line, or "— (none)">
+HEADLINE: <the main headline>
+SUBHEAD: <the subhead, or "— (none)">
+NOTE: <one short line naming the shape only, e.g. "long headline, no eyebrow, short subhead">`,
+  },
+  {
     slug: "vsl-lift-notes",
     label: "VSL Lift Notes",
     group: "Email",

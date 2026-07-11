@@ -64,11 +64,19 @@ export interface AnalyzerReviewSummary {
   source?: "packager" | null;
   hasPerformanceData?: boolean;
   effectivenessScore?: number | null;
+  /** headline price parsed from the offer — drives the frontend/backend tier match */
+  pricePoint?: number | null;
   training?: {
     performanceScore?: number | null;
     isBestPerformer?: boolean;
   } | null;
   supplementalFiles?: Array<{ id: string; filename: string; category: string }>;
+  /**
+   * Analyzer-extracted sections. `headline` holds the promo's real
+   * eyebrow / main headline / subheadline plus a 4 U's verdict — the source of
+   * truth for the Alternative Headlines RAG (no separate training needed).
+   */
+  sections?: { headline?: string | null } | null;
 }
 
 /** List all analyzer reviews (best-effort). */
