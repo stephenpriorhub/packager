@@ -97,8 +97,8 @@ export default function UploadForm({
       {/* Basic fields */}
       <div className="grid grid-cols-2 gap-3 mt-5">
         <Field label="Package / promo name" value={title} onChange={setTitle} placeholder="Auto from filename" />
-        <Field label="Publication" value={publisher} onChange={setPublisher} placeholder="e.g. Trade of the Day" />
-        <Field label="Product" value={product} onChange={setProduct} placeholder="Optional" />
+        <Field label="Publisher" value={publisher} onChange={setPublisher} placeholder="e.g. Monument Traders Alliance" />
+        <Field label="Product Sold / Publication Sold" value={product} onChange={setProduct} placeholder="e.g. The War Room" />
         <Field label="Price / terms" value={price} onChange={setPrice} placeholder="e.g. $79/yr, 365-day guarantee" />
       </div>
 
