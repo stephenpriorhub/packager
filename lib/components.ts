@@ -335,6 +335,30 @@ export function componentsForRun(includeHotlist: boolean): ComponentSpec[] {
   return ALL_COMPONENTS.filter((c) => (c.hotlist ? includeHotlist : true));
 }
 
+// ── Hotlist Builder (dedicated tab) ────────────────────────────────────────────
+// The standalone flow that takes a hotlist SIGN-UP PAGE (+ optional promo) and
+// produces the hotlist asset set directly — no full promo package required.
+
+/** Every hotlist component the Hotlist Builder can produce. */
+export const HOTLIST_COMPONENTS: ComponentSpec[] = ALL_COMPONENTS.filter((c) => c.hotlist);
+
+/** The core assets the Hotlist Builder checks by default: lift notes, space ads, text ads. */
+export const HOTLIST_DEFAULT_SLUGS: string[] = [
+  "hotlist-lift-notes",
+  "hotlist-space-ads",
+  "hotlist-text-ads",
+];
+
+/**
+ * Select which hotlist components a Hotlist Builder run should generate.
+ * Falls back to the default three if nothing valid is passed.
+ */
+export function hotlistComponents(slugs?: string[]): ComponentSpec[] {
+  const wanted = slugs?.filter((s) => HOTLIST_COMPONENTS.some((c) => c.slug === s)) ?? [];
+  const chosen = wanted.length ? wanted : HOTLIST_DEFAULT_SLUGS;
+  return HOTLIST_COMPONENTS.filter((c) => chosen.includes(c.slug));
+}
+
 /**
  * Whether a component may weave in a live "active catalyst" (Stephen, 2026-07-11).
  * Scoped to lift notes and space ads — the timely, high-variety pieces.
