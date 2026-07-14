@@ -3,9 +3,12 @@
  *
  * Runs the promo through Claude to extract the big idea, offer, guru(s), hooks,
  * and the promo's proof points (results/numbers/evidence) so every downstream
- * component pulls from the promo's own ammunition. Then best-effort registers
- * the promo as a Draft in the Promo Analyzer so it shows there with a 📦 and
- * becomes labeled training data once it launches.
+ * component pulls from the promo's own ammunition.
+ *
+ * NOTE: this does NOT register the promo in the Promo Analyzer. Registration is
+ * opt-in — it only happens when the user clicks "Send to Analyzer" on the results
+ * screen (see app/api/attach). We keep the fuller promo text on the brief so that
+ * on-demand registration stays high-fidelity.
  */
 
 import type Anthropic from "@anthropic-ai/sdk";
@@ -14,7 +17,6 @@ import type { PackageBrief } from "./brief";
 import { getClient } from "./anthropic";
 import { OPUS_MODEL } from "./models";
 import { detectGuru } from "./brain-reader";
-import { registerDraft } from "./analyzer-client";
 import { ocrPdf } from "./ocr";
 
 const MAX_PROMO_CHARS = 60000;
@@ -147,22 +149,13 @@ Return the JSON and nothing else.`;
     audience: parsed?.audience ?? "Conservative male investors, ~50–70.",
     promoType: hints.isHotlist ? "Hotlist" : parsed?.promoType ?? null,
     promoExcerpt: promoText.slice(0, EXCERPT_CHARS),
+    promoFullText: promoText.slice(0, MAX_PROMO_CHARS),
     reviewId: null,
     isHotlist: hints.isHotlist,
     eventName: hints.eventName,
     eventDate: hints.eventDate,
   };
 
-  // Best-effort: register as a Draft in the analyzer (adds the 📦 + training seed).
-  brief.reviewId = await registerDraft({
-    title: brief.title,
-    promoText: promoText.slice(0, MAX_PROMO_CHARS),
-    promoType: brief.promoType,
-    publisher: brief.publisher,
-    gurus: brief.gurus,
-    product: brief.product,
-    price: brief.price,
-  });
-
+  // NOTE: no analyzer registration here — that's opt-in via the results screen.
   return brief;
 }

@@ -93,10 +93,10 @@ export default function ResultsView({
         </div>
       </div>
 
-      {/* Attach to analyzer */}
+      {/* Send to analyzer (opt-in: registers the draft + attaches components) */}
       <div className="rounded-lg p-3 mb-5 flex items-center justify-between gap-3 flex-wrap" style={{ background: "var(--surface)" }}>
         <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-          Save this package to the Promo Analyzer draft so it becomes training data once the promo launches.
+          Send this package to the Promo Analyzer — it registers the promo as a draft and attaches every component, so the whole package becomes training data once the promo launches.
         </span>
         {attach.state === "done" ? (
           <span className="text-xs" style={{ color: "var(--success)" }}>✓ {attach.msg}</span>
@@ -107,7 +107,7 @@ export default function ResultsView({
             className="px-3 py-1.5 rounded-lg text-xs font-medium"
             style={{ background: "var(--surface-2)", border: "1px solid var(--border)" }}
           >
-            {attach.state === "working" ? "Attaching…" : "Attach to analyzer"}
+            {attach.state === "working" ? "Sending…" : "Send to analyzer"}
           </button>
         )}
       </div>

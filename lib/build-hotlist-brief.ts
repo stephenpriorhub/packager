@@ -19,7 +19,6 @@ import type { PackageBrief } from "./brief";
 import { getClient } from "./anthropic";
 import { OPUS_MODEL } from "./models";
 import { detectGuru } from "./brain-reader";
-import { registerDraft } from "./analyzer-client";
 import { ocrPdf } from "./ocr";
 
 const MAX_CHARS = 60000;
@@ -174,23 +173,13 @@ Return the JSON and nothing else.`;
     audience: parsed?.audience ?? "Conservative male investors, ~50–70.",
     promoType: "Hotlist",
     promoExcerpt,
+    promoFullText: groundingText.slice(0, MAX_CHARS),
     reviewId: null,
     isHotlist: true,
     eventName,
     eventDate,
   };
 
-  // Best-effort: register in the analyzer as a Hotlist draft so it feeds the
-  // learning loop (same as the promo flow).
-  brief.reviewId = await registerDraft({
-    title: brief.title,
-    promoText: groundingText.slice(0, MAX_CHARS),
-    promoType: "Hotlist",
-    publisher: brief.publisher,
-    gurus: brief.gurus,
-    product: brief.product,
-    price: brief.price,
-  });
-
+  // NOTE: no analyzer registration here — that's opt-in via the results screen.
   return brief;
 }

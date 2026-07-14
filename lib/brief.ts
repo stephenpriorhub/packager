@@ -31,6 +31,12 @@ export interface PackageBrief {
   promoType: string | null;
   /** trimmed promo text, for grounding generation in the actual copy */
   promoExcerpt: string;
+  /**
+   * Fuller promo text kept for on-demand analyzer registration. Registration is
+   * opt-in (a button on the results screen), so this is captured at build time
+   * and used only if/when the user chooses to send the package to the analyzer.
+   */
+  promoFullText: string;
   /** the analyzer review id this promo was registered under (for round-trip) */
   reviewId: string | null;
 
