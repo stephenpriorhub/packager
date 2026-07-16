@@ -10,7 +10,7 @@
  */
 
 import type { ComponentSpec } from "../components";
-import { usesCatalysts } from "../components";
+import { usesCatalysts, usesAdCompliance, adCompliancePlatform } from "../components";
 import type { PackageBrief } from "../brief";
 import type { MethodologyCorpus } from "../brain-reader";
 import { type CatalystResult, NO_CATALYSTS } from "../catalysts";
@@ -110,6 +110,42 @@ function catalystBlock(spec: ComponentSpec, catalysts: CatalystResult): string {
   ].join("\n");
 }
 
+/**
+ * Platform ad-policy compliance for paid video ads (Stephen, 2026-07-16, from
+ * the "YouTube Financial Ads Do's & Don'ts" network guide). YouTube and Facebook
+ * video ads run through Google Ads / Meta financial-products review; a single
+ * "Misleading Representation" pattern can permanently ban the ad account. These
+ * rules keep the COPY inside policy while staying persuasive.
+ *
+ * Scope note (Stephen's call): copy/scripting only. We do NOT add on-screen risk
+ * warnings, visual disclaimers, or "investing involves risk" overlays — the
+ * no-disclaimer-in-copy rule still holds. This block only shapes what the copy
+ * SAYS (and what it must not say), never appends disclaimer language.
+ */
+function adComplianceBlock(spec: ComponentSpec): string {
+  if (!usesAdCompliance(spec)) return "";
+  const platform = adCompliancePlatform(spec);
+  const network = platform === "Facebook" ? "Meta (Facebook) Advertising Policies" : "Google Ads financial-products policies";
+  return [
+    `━━━ ${platform} AD-POLICY COMPLIANCE (mandatory — keeps the ad account alive) ━━━`,
+    `This copy will be scanned by ${network}. Policy reviewers read the transcript, audio, and on-screen text together; a "Misleading Representation" pattern can permanently suspend the ad account. Stay persuasive but keep every line defensible:`,
+    ``,
+    `NEVER (these trip automated financial-scam / misleading-claim flags):`,
+    `- No outsized, unrealistic gain claims as the hook or promise — e.g. "3,000% gains", "turn $500 into $50,000", "overnight millionaire". Reference real results only as historically-verified exceptions, never as what a viewer should expect.`,
+    `- No hyper-urgency clichés — e.g. "once this window closes it's gone forever", "act in the next 10 minutes or miss out". Urgency must be honest and specific, not manufactured doom.`,
+    `- No false "free" claims — don't say "100% free, no email required" (or similar) when the offer needs an email, registration, or a card on file to access. Describe the real cost of entry.`,
+    `- No fabricated authority or endorsement — never imply backing from public figures, agencies, or brands (e.g. Elon Musk, the CIA, a sitting President) the publisher isn't actually endorsed by.`,
+    `- No direct private/pre-IPO access claims for retail — never tell ordinary viewers they can "buy directly into pre-IPO / private shares" of a company. Retail can't, and it flags as a scam.`,
+    ``,
+    `ALWAYS:`,
+    `- Balanced framing: pair any big number with the reality that past results don't guarantee future returns — worked into the copy naturally (as framing, NOT a legal disclaimer line).`,
+    `- Ad-to-landing-page congruency: whatever the hook offers (e.g. "the free report") must be exactly what the destination delivers, with no bait-and-switch. Only promise what the landing page actually gives.`,
+    `- Honest CTA language: the CTA describes the true next step and destination — e.g. "Read the Full Free Article", "Request the Free Newsletter" — never a misleading label.`,
+    `- Professional, informative pace and tone: build genuine curiosity; avoid frenetic, alarmist "URGENT WARNING" sensationalism that reviewers flag as scam-like.`,
+    `- Pre-IPO "backdoor play" framing: when the promo is built around a hotly-anticipated private company (e.g. SpaceX, a private defense-tech startup), do NOT offer its shares. Instead teach the viewer to play publicly-traded proxies — an ETF, the parent company, or a listed supplier/partner — that captures that growth. This is both policy-safe and a strong retail hook.`,
+  ].join("\n");
+}
+
 function outputContract(spec: ComponentSpec, n: number): string {
   if (!spec.perItem) {
     return `OUTPUT: Return ONLY the finished document content — no preamble, no explanation, no markdown code fences. Use clear labels/sub-headings where the instructions call for structured fields.`;
@@ -179,6 +215,8 @@ export function buildComponentPrompt(
     voiceRule(spec, brief, guruCount, n),
     ``,
     formatRules(spec, !!ragBlock),
+    ``,
+    adComplianceBlock(spec),
     ``,
     catalystBlock(spec, catalysts),
     `━━━ BRIEF ━━━`,

@@ -366,3 +366,23 @@ export function hotlistComponents(slugs?: string[]): ComponentSpec[] {
 export function usesCatalysts(spec: ComponentSpec): boolean {
   return spec.slug.includes("lift-notes") || spec.slug.includes("space-ads");
 }
+
+/**
+ * Whether a component is a paid video ad that runs on a platform with a strict
+ * financial-products ad policy (Google Ads / Meta). Scoped to YouTube + Facebook
+ * VIDEO ads (Stephen, 2026-07-16) — these are the pieces whose copy can trigger
+ * "Misleading Representation" reviews and permanent ad-account suspensions, so
+ * they carry a platform-compliance rule block. Per Stephen: this covers the
+ * copy/scripting only — NOT on-screen/visual disclaimers or risk-warning
+ * overlays (the no-disclaimer-in-copy rule stands).
+ */
+export function usesAdCompliance(spec: ComponentSpec): boolean {
+  return spec.slug === "youtube-video-ads" || spec.slug === "facebook-video-ads";
+}
+
+/** The paid-video-ad platform a compliance-scoped component runs on. */
+export function adCompliancePlatform(spec: ComponentSpec): "YouTube" | "Facebook" | null {
+  if (spec.slug === "youtube-video-ads") return "YouTube";
+  if (spec.slug === "facebook-video-ads") return "Facebook";
+  return null;
+}
