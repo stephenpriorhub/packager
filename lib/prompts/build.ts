@@ -19,6 +19,7 @@ import {
   buildLiftCraftBlock,
   buildSalesLetterBlock,
   buildGuruVoiceBlock,
+  buildMasterLawsBlock,
 } from "../brain-reader";
 
 export const ITEM_DELIM = "===ITEM===";
@@ -200,6 +201,7 @@ export function buildComponentPrompt(
 ): BuiltPrompt {
   const system = [
     PERSONA,
+    buildMasterLawsBlock(corpus),
     methodologyFor(spec, corpus),
     buildWritingRulesBlock(corpus.principles),
   ]

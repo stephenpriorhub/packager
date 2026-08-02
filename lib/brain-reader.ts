@@ -49,6 +49,7 @@ const SALES_LETTER_DIR = "Areas/Copy/Writing Promos (Sales Letters)";
 const SALES_LETTER_FILES = ["16-Word Sales Letter.md", "Copy-Boarding System.md"];
 
 const PRINCIPLES_REL = "Resources/Promo Analysis/Copywriting Principles.md";
+const MASTER_SYNTHESIS_REL = "Areas/Copywriting Mastery/01 - The Master Synthesis.md";
 const SOCIAL_TACTICS_REL = "Resources/Copy Tactics/Social Ad Tactics.md";
 const COMPONENT_GUIDE_DIR = "Areas/Copy/Component Guides";
 
@@ -149,6 +150,7 @@ export function detectGuru(text: string): string | null {
 
 export interface MethodologyCorpus {
   principles: string | null; // curated MTA copy principles
+  masterLaws: string | null; // the 12 Convergent Laws (master synthesis)
   liftGuides: string[]; // parsed lift-note guides
   salesLetterGuides: string[]; // 16-word / copy-boarding frameworks
   guru: string | null;
@@ -161,9 +163,10 @@ export interface MethodologyCorpus {
  * parallel; each is independently soft.
  */
 export async function loadMethodology(guru: string | null): Promise<MethodologyCorpus> {
-  const [principles, liftGuides, salesLetterGuides, guruProfile, socialTactics] =
+  const [principles, masterLaws, liftGuides, salesLetterGuides, guruProfile, socialTactics] =
     await Promise.all([
       readVaultText(PRINCIPLES_REL),
+      readVaultText(MASTER_SYNTHESIS_REL),
       Promise.all(LIFT_GUIDES.map((f) => readVaultText(`${LIFT_GUIDE_DIR}/${f}`))).then(
         (arr) => arr.filter((x): x is string => !!x)
       ),
@@ -176,7 +179,7 @@ export async function loadMethodology(guru: string | null): Promise<MethodologyC
       readVaultText(SOCIAL_TACTICS_REL),
     ]);
 
-  return { principles, liftGuides, salesLetterGuides, guru, guruProfile, socialTactics };
+  return { principles, masterLaws, liftGuides, salesLetterGuides, guru, guruProfile, socialTactics };
 }
 
 /** Auto-authored per-component guide, if one exists for this component slug. */
@@ -211,6 +214,34 @@ export function buildWritingRulesBlock(principles: string | null): string {
     );
   }
   return base.join("\n");
+}
+
+/**
+ * Master Copywriting Frameworks — the 12 Convergent Laws of direct-response copy
+ * distilled from the master copywriters (Halbert, Makepeace, Carlton,
+ * Albuquerque, Kennedy, Brunson, Ballard, Cialdini). Live-read from the brain so
+ * it stays in sync with the vault. Applied INVISIBLY to the output — the
+ * frameworks are never named in reader-facing copy, and nothing here overrides
+ * the no-disclaimer / voice rules above.
+ */
+export function buildMasterLawsBlock(corpus: MethodologyCorpus): string {
+  if (!corpus.masterLaws) return "";
+  return [
+    "\n### MASTER COPYWRITING FRAMEWORKS — the 12 Convergent Laws (from the MTA brain, Areas/Copywriting Mastery; each law source-attributed to the masters — Halbert, Makepeace, Carlton, Albuquerque, Kennedy, Brunson, Ballard, Cialdini)",
+    "Apply these to the COPY you produce — invisibly, never naming a framework in reader-facing text:",
+    "• Rest the whole piece on ONE big idea / lead domino — a single belief that, once accepted, makes the sale inevitable (Albuquerque, Makepeace).",
+    "• Name a UNIQUE MECHANISM — why THIS works when others fail, answerable in one sentence (Albuquerque; Carlton's one-legged-golfer USP).",
+    "• Run on ONE dominant, already-resident emotion — fear-of-loss and FOMO are different engines; emotion drives, then proof/logic justifies the decision (Makepeace, Ballard).",
+    "• Enter the conversation already in the reader's head — open on their current, specific worry, not on the product (Halbert, Carlton).",
+    "• Make every bullet a FASCINATION — an open curiosity loop, payoff promised but withheld, never a flat feature (Carlton, Bond Halbert).",
+    "• Grease the slide — remove friction: short sentences, no speed-bumps, sub-heads that tell the story on their own when skimmed (Bond Halbert).",
+    "• Build on a PROVEN STRUCTURE — Star-Story-Solution, Problem-Agitate-Solve, AIDA, or the 16-word spine (Halbert, Albuquerque).",
+    "• Write to ONE person, out loud, conversationally — personal-mail voice, not a brochure (Halbert).",
+    "• Back every claim with a reason-why and specific proof; specifics beat superlatives (Halbert, Kennedy).",
+    "",
+    "Full source-attributed reference:",
+    clip(corpus.masterLaws, 5000),
+  ].join("\n");
 }
 
 /** Assemble the lift-note craft block from the parsed guides. */
