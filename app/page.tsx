@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UploadForm, { type GeneratePayload } from "@/components/UploadForm";
 import HotlistForm, { type HotlistPayload } from "@/components/HotlistForm";
 import GeneratingView, { type CompStatus } from "@/components/GeneratingView";
@@ -33,6 +33,15 @@ export default function Home() {
   const [components, setComponents] = useState<GeneratedComponent[]>([]);
   const [packageId, setPackageId] = useState<string | null>(null);
   const [error, setError] = useState("");
+  /** Training Library is admin-only; the tab stays hidden until we know. */
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/session")
+      .then((r) => r.json())
+      .then((s) => setIsAdmin(!!s.isAdmin))
+      .catch(() => setIsAdmin(false));
+  }, []);
 
   /** Shared NDJSON-stream driver for both the promo and hotlist flows. */
   async function runFlow(url: string, form: FormData, expected: ComponentSpec[], which: FlowTab) {
@@ -147,8 +156,8 @@ export default function Home() {
             { id: "generate", label: "📦 Generate" },
             { id: "hotlist", label: "🔥 Hotlist" },
             { id: "packages", label: "📁 Past Packages" },
-            { id: "training", label: "🎓 Training Library" },
-          ] as const
+            ...(isAdmin ? [{ id: "training", label: "🎓 Training Library" }] : []),
+          ] as { id: Tab; label: string }[]
         ).map((t) => (
           <button
             key={t.id}
@@ -165,7 +174,7 @@ export default function Home() {
         ))}
       </div>
 
-      {tab === "training" && <TrainingLibrary />}
+      {tab === "training" && isAdmin && <TrainingLibrary />}
 
       {tab === "packages" && <PackageLibrary onOpen={openPackage} />}
 

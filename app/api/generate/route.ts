@@ -14,7 +14,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
-import { requireAdmin } from "@/lib/hub-auth";
+import { requireHubUser } from "@/lib/hub-auth";
 import { extractFile } from "@/lib/extract-text";
 import { buildBrief } from "@/lib/build-brief";
 import { loadMethodology } from "@/lib/brain-reader";
@@ -30,7 +30,7 @@ export const maxDuration = 800;
 const COMPONENT_CONCURRENCY = 3;
 
 export async function POST(req: NextRequest) {
-  const gate = await requireAdmin(req);
+  const gate = await requireHubUser(req);
   if (gate instanceof NextResponse) return gate;
   const user = gate;
 

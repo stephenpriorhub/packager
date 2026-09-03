@@ -6,7 +6,7 @@
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/hub-auth";
+import { requireHubUser } from "@/lib/hub-auth";
 import { getPackage } from "@/lib/package-store";
 import { buildComponentDocx, buildPackageZip, safeFilename } from "@/lib/export-docx";
 
@@ -16,7 +16,7 @@ const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 export async function GET(req: NextRequest) {
-  const gate = await requireAdmin(req);
+  const gate = await requireHubUser(req);
   if (gate instanceof NextResponse) return gate;
 
   const { searchParams } = new URL(req.url);

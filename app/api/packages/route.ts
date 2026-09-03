@@ -6,13 +6,13 @@
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/hub-auth";
+import { requireHubUser } from "@/lib/hub-auth";
 import { getPackage, listPackages } from "@/lib/package-store";
 
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
-  const gate = await requireAdmin(req);
+  const gate = await requireHubUser(req);
   if (gate instanceof NextResponse) return gate;
 
   const id = new URL(req.url).searchParams.get("id");

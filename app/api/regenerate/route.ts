@@ -6,7 +6,7 @@
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/hub-auth";
+import { requireHubUser } from "@/lib/hub-auth";
 import { getPackage, updateComponent } from "@/lib/package-store";
 import { getComponent, usesCatalysts } from "@/lib/components";
 import { loadMethodology } from "@/lib/brain-reader";
@@ -17,7 +17,7 @@ export const runtime = "nodejs";
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
-  const gate = await requireAdmin(req);
+  const gate = await requireHubUser(req);
   if (gate instanceof NextResponse) return gate;
 
   const { packageId, slug, feedback } = (await req.json()) as {

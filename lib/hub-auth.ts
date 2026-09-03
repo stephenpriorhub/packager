@@ -6,8 +6,10 @@
  * server-side to the hub's /api/me (same pattern as promo-analyzer, vsl-builder,
  * mta-wiki) to resolve {id, email, name, role}.
  *
- * The Packager is ADMIN-ONLY for now: every mutating/generation route calls
- * requireAdmin(). Fail-closed — if the hub is unreachable, access is denied.
+ * Access follows the hub grant: requireHubUser() admits anyone the hub says is
+ * authorized for the `packager` project (direct grant, category, or group).
+ * Only the Training Library is further restricted to admins via requireAdmin().
+ * Fail-closed — if the hub is unreachable, access is denied.
  */
 
 import type { NextRequest } from "next/server";
@@ -63,7 +65,7 @@ export async function getHubUser(req: NextRequest): Promise<HubUser | null> {
   }
 }
 
-export function isHubAdmin(user: HubUser | null): boolean {
+export function isHubAdmin(user: HubUser | null): user is HubUser {
   return (
     !!user &&
     (user.role === "super_admin" || user.role === "exec_admin" || user.role === "admin")
@@ -71,20 +73,30 @@ export function isHubAdmin(user: HubUser | null): boolean {
 }
 
 export function forbidden(
-  message = "The Packager is restricted to OxfordHub admins."
+  message = "You don't have access to The Packager in OxfordHub."
 ): NextResponse {
   return NextResponse.json({ error: message }, { status: 403 });
 }
 
 /**
- * Gate for every Packager route. Returns the admin user, or a 403 Response to
- * return directly. Usage:
- *   const gate = await requireAdmin(req);
+ * Gate for every Packager route. Admits any user the hub has granted the
+ * `packager` project — getHubUser() already returns null unless /api/me says
+ * `authorized`, so the hub's grants (Copywriters group included) are the single
+ * source of truth. Returns the user, or a 403 Response to return directly:
+ *   const gate = await requireHubUser(req);
  *   if (gate instanceof NextResponse) return gate;
  *   const user = gate;
  */
+export async function requireHubUser(req: NextRequest): Promise<HubUser | NextResponse> {
+  const user = await getHubUser(req);
+  if (!user) return forbidden();
+  return user;
+}
+
+/** Stricter gate for the Training Library only — admins and above. */
 export async function requireAdmin(req: NextRequest): Promise<HubUser | NextResponse> {
   const user = await getHubUser(req);
-  if (!isHubAdmin(user)) return forbidden();
-  return user as HubUser;
+  if (!isHubAdmin(user))
+    return forbidden("The Training Library is restricted to OxfordHub admins.");
+  return user;
 }
