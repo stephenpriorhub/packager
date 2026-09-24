@@ -23,6 +23,7 @@ import fs from "fs";
 import path from "path";
 import mammoth from "mammoth";
 import { getEnv } from "./env";
+import { detectGuruInText, GURU_ALIASES } from "./detect-guru";
 
 const BRAIN_DIR =
   getEnv("BRAIN_DIR")?.replace(/\/(Areas|Resources)\/.*$/, "") ??
@@ -133,18 +134,7 @@ function clip(text: string, max = 6000): string {
 // ── guru detection ──────────────────────────────────────────────────────────
 
 export function detectGuru(text: string): string | null {
-  const hay = text.toLowerCase();
-  for (const guru of Object.keys(GURU_MAP)) {
-    const [first, last] = guru.split(" ");
-    if (
-      hay.includes(guru.toLowerCase()) ||
-      hay.includes(last.toLowerCase()) ||
-      hay.includes(first.toLowerCase())
-    ) {
-      return guru;
-    }
-  }
-  return null;
+  return detectGuruInText(text, Object.keys(GURU_MAP), GURU_ALIASES);
 }
 
 // ── public corpus loaders ────────────────────────────────────────────────────
