@@ -35,6 +35,7 @@ const GURU_MAP: Record<string, string> = {
   "Bryan Bottarelli": "Bryan Bottarelli.md",
   "Karim Rahemtulla": "Karim Rahemtulla.md",
   "Nate Bear": "Nate Bear.md",
+  "Matt McCall": "Matt McCall.md",
   "Chris Johnson": "Chris Johnson.md",
 };
 
